@@ -1,0 +1,159 @@
+config:
+  contextPath: /
+  port: 23088
+  shutdown: immediate
+  maxFileSize: 15MB
+  fileSizeThreshold: 1MB
+
+#异步任务
+execute:
+  coreSize: 8
+  keepAlive: 60s
+  maxSize:
+  queueCapacity:
+  awaitPeriod: 5s
+
+schedule:
+  poolSize: 4
+  awaitPeriod: 5s
+
+log:
+  fileName: ./logs/nohup.log
+
+logging:
+  logback:
+    rollingpolicy:
+      max-file-size: 1GB
+      max-history: 30
+      total-size-cap: 30GB
+
+mybatisPlus:
+  #log: org.apache.ibatis.logging.stdout.StdOutImpl
+  log:
+
+jwt:
+  signKey: 60cf71fe160e4470ba73889a863c98fd
+filter:
+  sign: false
+  signFilterWhiteUrls: /sapi,/api/thd
+aes:
+  secretKey: 22d5cfa3dfa7487988b8931e3c223fed
+rsa:
+  genType: file
+  filePath: classpath:rsa/private_pkcs8.pem
+
+hashids:
+  salt: aa2088898ed54adeb247e020dc833ee4
+  minLength: 6
+  alphabet: ABCDEFGHJK23456789MNPQRSTUVWXYZ
+
+mysql:
+  url: jdbc:mysql://127.0.0.1:3306/nexa?useUnicode=true&characterEncoding=utf8&zeroDateTimeBehavior=convertToNull&useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=GMT%2B8
+  user: dev
+  pwd: Dev2023@#!
+
+spring:
+  datasource:
+    druid:
+      initialSize: 16
+      maxActive: 300
+      maxIdle: 32
+      maxWait: 30000
+
+redis:
+  host: 127.0.0.1
+  db:  12
+  port: 6379
+  pwd: YwlxRedis2024!.
+  timeout: 6000ms
+  pool:
+    maxActive: 50
+    maxWait: 50ms
+    maxIdle: 20
+    minIdle: 10
+    timeBetweenEvictionRuns: 30s
+    shutdownTimeout: 1s
+  stream:
+    host: 127.0.0.1
+    db: 13
+    port: 6379
+    pwd: YwlxRedis2024!.
+    timeout: 36000ms
+    pool:
+      maxActive: 50
+      maxWait: 5s
+      maxIdle: 20
+      minIdle: 8
+      timeBetweenEvictionRuns: 60s
+      shutdownTimeout: 2s
+
+evm:
+  keystorePath: /opt/java/cs-server/.ks
+  keyPwd: 6ad149555dc54f249eb10a0f91696b13
+
+hhff:
+  api: https://gate.pgate.hhffshop.xyz
+  merchantId: 100001
+  secret: d7cca6abc80b92cfbfb70648704b621d
+
+app:
+  agent: true
+  taskFlag: 0
+  uploadPath: /opt/www/cs/ugc
+  inviteRankPrizeNum: 5
+  welcomeStr: Welcome to GCC316 RWA!
+  inviteRankNum: 20
+  getGenesisStart: 10001
+  genesisNum: 500
+  priceDecimal: 10
+  tokenDecimal: 10
+  regCanWithdraw: 1
+  autoSellGccFlag: 0
+  checkQrCode: 1
+  callPayApi: 1
+  paytool: automatic
+  payNotifyUrl: https://ddg.kzqtuplmloonline.top
+  allowPayTypes: 2
+  invitePoolSettleDay: 2
+  okxApiPageLimit: 10
+  okxBalanceRefreshLimit: 20
+  okxLastCloseTime: 23:55
+  okxSleepTime: 5
+  skipApiCheck: false
+  tokenLpAddr: 0xBb2b8038a1640196FbE3e38816F3e67Cba72D940
+  tokenDirection: 1
+  tokenTwapMinute: 5
+  tokenTwapGap: 100
+  useLegendaryCopyOfTrader: true
+  agentCode: AGENT20240612
+
+tg:
+  bot:
+    enable: true
+    api: http://localhost:6666/tapi/notify
+
+okx:
+  testnet: true
+
+sp:
+  redismq:
+    # 不使用默认的，默认的使用主redisTemplate
+    stream:
+      streamKey: invest
+      producer:
+        name: investProducer
+      consumer:
+        name: investConsumer
+        group: investGroup
+
+tron:
+  fullnode:
+#    url: https://api.trongrid.io
+    url: https://nile.trongrid.io
+  api:
+    key: f0d75aa6-48e6-4dbb-a48e-c3d5b0f1bdc5
+  rental:
+    deposit-address: TFEWqCSUFs6tthfyLWFjpUepSqWPWKDZQx
+    ratio: 10667 # 1 TRX = 10667 Energy (Configure according to market),3trx=32000
+    duration: 600000    # 默认租赁时长(毫秒) = 1小时
+    min-amount: 1000000  # 最小租赁金额(SUN) = 1 TRX

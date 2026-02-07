@@ -1,0 +1,103 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!--
+  ~ The MIT License (MIT)
+  ~
+  ~ Copyright (c) 2014 abel533@gmail.com
+  ~
+  ~ Permission is hereby granted, free of charge, to any person obtaining a copy
+  ~ of this software and associated documentation files (the "Software"), to deal
+  ~ in the Software without restriction, including without limitation the rights
+  ~ to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+  ~ copies of the Software, and to permit persons to whom the Software is
+  ~ furnished to do so, subject to the following conditions:
+  ~
+  ~ The above copyright notice and this permission notice shall be included in
+  ~ all copies or substantial portions of the Software.
+  ~
+  ~ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+  ~ IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+  ~ FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+  ~ AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+  ~ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+  ~ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+  ~ THE SOFTWARE.
+  -->
+
+<!DOCTYPE generatorConfiguration
+        PUBLIC "-//mybatis.org//DTD MyBatis Generator Configuration 1.0//EN"
+        "http://mybatis.org/dtd/mybatis-generator-config_1_0.dtd">
+
+<generatorConfiguration>
+    <properties url="${mybatis-generator.config.properties}"/>
+
+    <context id="Mysql" targetRuntime="MyBatis3Simple" defaultModelType="flat">
+        <property name="autoDelimitKeywords" value="true"/>
+        <property name="beginningDelimiter" value="`"/>
+        <property name="endingDelimiter" value="`"/>
+
+        <plugin type="tk.mybatis.mapper.generator.MapperPlugin">
+            <property name="mappers" value="tk.mybatis.mapper.common.Mapper"/>
+            <property name="caseSensitive" value="true"/>
+        </plugin>
+
+        <jdbcConnection driverClass="${jdbc.driverClass}"
+                        connectionURL="${jdbc.url}"
+                        userId="${jdbc.user}"
+                        password="${jdbc.password}">
+        </jdbcConnection>
+
+        <javaModelGenerator targetPackage="${package.name}.entity" targetProject="src/main/java"/>
+
+        <!--        <sqlMapGenerator targetPackage="${package.name}.mapper.xml" targetProject="src/main/java"/>-->
+        <sqlMapGenerator targetPackage="mybatis.mapper" targetProject="src/main/resources"/>
+
+        <javaClientGenerator targetPackage="${package.name}.mapper" targetProject="src/main/java"
+                             type="XMLMAPPER"/>
+
+
+        <!--        <table tableName="sys_nft_config" domainObjectName="SysNftConfig">-->
+        <!--            <generatedKey column="id" sqlStatement="JDBC"/>-->
+        <!--        </table>-->
+        <!--        <table tableName="token_holder" domainObjectName="TokenHolder">-->
+        <!--            <generatedKey column="id" sqlStatement="JDBC"/>-->
+        <!--        </table>-->
+
+        <!--        <table tableName="token_flow" domainObjectName="TokenFlow">-->
+        <!--            <generatedKey column="id" sqlStatement="JDBC"/>-->
+        <!--        </table>-->
+
+<!--        <table tableName="token_collection" domainObjectName="TokenCollection">-->
+<!--            <generatedKey column="id" sqlStatement="JDBC"/>-->
+<!--        </table>-->
+        <table tableName="token_detail" domainObjectName="TokenDetail">
+            <generatedKey column="id" sqlStatement="JDBC"/>
+        </table>
+
+
+        <!--
+                <table tableName="tx_inventory" domainObjectName="Inventory">
+                    <generatedKey column="id" sqlStatement="JDBC"/>
+                </table>
+                <table tableName="tx_inventory_detail" domainObjectName="InventoryDetail">
+                    <generatedKey column="id" sqlStatement="JDBC"/>
+                </table>
+                <table tableName="tx_score_detail" domainObjectName="ScoreDetail">
+                    <generatedKey column="id" sqlStatement="JDBC"/>
+                </table>
+
+                <table tableName="tx_order" domainObjectName="Order">
+                    <generatedKey column="id" sqlStatement="JDBC"/>
+                </table>
+
+               <table tableName="tx_coupon" domainObjectName="Coupon">
+                    <generatedKey column="id" sqlStatement="JDBC"/>
+                </table>
+                <table tableName="tx_coupon_consume" domainObjectName="CouponConsume">
+                    <generatedKey column="id" sqlStatement="JDBC"/>
+                </table>
+                <table tableName="tx_coupon_receive" domainObjectName="CouponReceive">
+                    <generatedKey column="id" sqlStatement="JDBC"/>
+                </table>-->
+    </context>
+</generatorConfiguration>

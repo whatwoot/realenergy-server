@@ -1,0 +1,273 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.cs.copy.member.server.mapper.MemberMapper">
+
+    <update id="updateNoLoop" parameterType="com.cs.copy.member.api.entity.Member">
+        WITH RECURSIVE InviteTree AS (
+            SELECT id, pid
+            FROM u_member
+            WHERE id = #{pid} and deleted = 0
+            UNION ALL
+            SELECT u.id, u.pid
+            FROM u_member u INNER JOIN InviteTree it ON u.id = it.pid
+            where u.deleted = 0
+        )
+        update u_member
+        <set>
+            pid = #{pid},
+        </set>
+        where id = #{id}
+          and pid is null
+          and not exists (
+                SELECT 1 FROM InviteTree WHERE id = #{id}
+            )
+    </update>
+
+    <select id="listParents" resultType="com.cs.copy.member.api.dto.MemberWithLevelDTO">
+        WITH RECURSIVE cte AS (
+            select 0 as n, b.* from u_member b where b.id = #{id}
+            union all
+            select n+1, a.* from u_member a inner join cte c on a.ID = c.pid
+        )select * from cte where deleted = 0
+    </select>
+
+    <select id="listChildren" resultType="com.cs.copy.member.api.dto.MemberWithLevelDTO">
+        WITH RECURSIVE cte AS (
+            select 0 as n, b.* from u_member b where b.id = #{id}
+            union all
+            select n+1, a.* from u_member a inner join cte c on a.pid = c.id
+        ) select * from cte where deleted = 0
+    </select>
+
+    <update id="updateChange" parameterType="com.cs.copy.member.api.entity.Member">
+        update u_member
+            <set>
+                <if test="inviteNum != null">
+                    invite_num = invite_num + #{inviteNum},
+                </if>
+                <if test="directInviteNum != null">
+                    direct_invite_num = direct_invite_num + #{directInviteNum},
+                </if>
+                <if test="validDirectInviteNum != null">
+                    valid_direct_invite_num = valid_direct_invite_num + #{validDirectInviteNum},
+                </if>
+                <if test="inviteLevelId != null">
+                    invite_level_id = invite_level_id + #{inviteLevelId},
+                </if>
+                <if test="levelId != null">
+                    level_id = level_id + #{levelId},
+                </if>
+                <if test="prizeAmount != null">
+                    prize_amount = prize_amount + #{prizeAmount},
+                </if>
+                <if test="performance != null">
+                    performance = performance + #{performance},
+                </if>
+                <if test="teamPerformance != null">
+                    team_performance = team_performance + #{teamPerformance},
+                </if>
+            </set>
+        <where>
+            id = #{id}
+        </where>
+    </update>
+
+    <update id="updateInviteLvChange" parameterType="com.cs.copy.member.api.entity.Member">
+        update u_member
+            <set>
+                invite_level_id = invite_level_id + #{change},
+            </set>
+            <where>
+                and id = #{uid}
+                and invite_level_id <![CDATA[<=]]> #{max}
+            </where>
+    </update>
+
+    <update id="updateParentChange" parameterType="com.cs.copy.member.api.entity.Member">
+        UPDATE u_member AS ff
+        <set>
+            <if test="inviteNum != null">
+                ff.invite_num = ff.invite_num + #{inviteNum},
+            </if>
+            <if test="frozenPerformance != null">
+                ff.frozen_performance = ff.frozen_performance + #{frozenPerformance},
+            </if>
+            <if test="teamPerformance != null">
+                ff.team_performance = ff.team_performance + #{teamPerformance},
+            </if>
+            <if test="performance != null">
+                ff.performance = ff.performance + #{performance},
+            </if>
+            <if test="performanceUpdateAt != null">
+                ff.performance_update_at = #{performanceUpdateAt},
+            </if>
+        </set>
+        WHERE EXISTS(
+                      WITH RECURSIVE cte AS (
+                          select b.id,b.pid from u_member b where b.deleted = 0 and b.id = #{id}
+                          union all
+                          select a.id,a.pid from u_member a inner join cte c on a.ID = c.pid where a.deleted = 0
+                      )
+                      select 1 from cte ct where ct.id = ff.id and ct.id  <![CDATA[<>]]> #{id}
+                  )
+    </update>
+
+    <select id="groupInviteSummary" resultType="com.cs.copy.member.api.vo.InviteSummary">
+        select ifnull(max(performance + team_performance),0) highest, ifnull(sum(performance + team_performance),0) `total`
+        from u_member
+        where pid = #{id}
+        and deleted = 0
+    </select>
+
+    <update id="updateBonusChange" parameterType="com.cs.copy.member.api.entity.Member">
+        update u_member
+        <set>
+            <if test="prizeAmount != null">
+                prize_amount = prize_amount + #{prizeAmount},
+            </if>
+            <if test="prizeBonusDay != null">
+                prize_bonus_day = #{prizeBonusDay},
+            </if>
+        </set>
+        <where>
+            id = #{id}
+            <if test="prizeBonusDay != null">
+                and prize_bonus_day <![CDATA[<]]> #{prizeBonusDay}
+            </if>
+        </where>
+    </update>
+
+    <update id="updateParentPerformanceChange" parameterType="com.cs.copy.member.api.entity.Member">
+        UPDATE u_member AS ff
+        <set>
+            <if test="frozenPerformance != null">
+                ff.frozen_performance = IF(valid != 1, ff.frozen_performance + #{frozenPerformance}, ff.frozen_performance),
+            </if>
+            <if test="teamPerformance != null">
+                ff.team_performance = IF(valid = 1,ff.team_performance + #{teamPerformance}, ff.team_performance),
+            </if>
+            <if test="performanceUpdateAt != null">
+                ff.performance_update_at = #{performanceUpdateAt},
+            </if>
+        </set>
+        WHERE EXISTS(
+        WITH RECURSIVE CTE AS (
+        select b.id,b.pid from u_member b where b.deleted = 0 and b.id = #{id}
+        union all
+        select a.id,a.pid from u_member a inner join cte c on a.ID = c.pid where a.deleted = 0
+        )
+        select 1 from CTE ct where ct.id = ff.id and ct.id  <![CDATA[<>]]> #{id}
+        )
+    </update>
+
+    <update id="updateToValid" parameterType="com.cs.copy.member.api.entity.Member">
+        update u_member
+        <set>
+            <if test="valid != null">
+                valid = #{valid},
+            </if>
+            <if test="validAt != null">
+                valid_at = #{validAt},
+            </if>
+            <if test="inviteCode != null">
+                invite_code = #{inviteCode},
+            </if>
+        </set>
+        <where>
+            id = #{id}
+            and valid <![CDATA[<>]]> #{valid}
+        </where>
+    </update>
+
+    <update id="updateChangeChecked" parameterType="com.cs.copy.member.api.entity.Member">
+        update u_member
+        <set>
+            <if test="inviteNum != null">
+                invite_num = invite_num + #{inviteNum},
+            </if>
+            <if test="prizeAmount != null">
+                prize_amount = prize_amount + #{prizeAmount},
+            </if>
+            <if test="performance != null">
+                performance = performance + #{performance},
+            </if>
+            <if test="teamPerformance != null">
+                team_performance = team_performance + #{teamPerformance},
+            </if>
+            <if test="frozenPerformance != null">
+                frozen_performance = frozen_performance + #{frozenPerformance},
+            </if>
+        </set>
+        <where>
+            id = #{id}
+            <if test="prizeAmount != null">
+                and prize_amount >= -#{prizeAmount}
+            </if>
+            <if test="performance != null">
+                and performance >=  -#{performance},
+            </if>
+            <if test="teamPerformance != null">
+                and team_performance >=  -#{teamPerformance},
+            </if>
+            <if test="frozenPerformance != null">
+                and frozen_performance > -#{frozenPerformance},
+            </if>
+        </where>
+    </update>
+
+    <select id="groupLevelsNum" resultType="com.cs.copy.member.api.vo.LevelsNumVO">
+        select level_id, count(*) num
+        from u_member
+        where deleted = 0
+            and level_id != 0
+        group by level_id
+    </select>
+
+    <select id="listGenesisSmallPerformance" resultType="com.cs.copy.asset.api.dto.MemberPerformanceDTO">
+        SELECT
+            pid AS uid,
+            COALESCE(SUM(CASE WHEN rn > 1 THEN total_performance ELSE 0 END), 0) AS `smallPerformance`
+        FROM (
+                 SELECT
+                     pid,
+                     (performance + team_performance) AS total_performance,
+                     ROW_NUMBER() OVER (
+                         PARTITION BY pid
+                         ORDER BY (performance + team_performance) DESC
+                         ) AS rn
+                 FROM u_member
+                 WHERE pid in
+                    <foreach collection="ids" item="item" open="(" close=")" separator="," >
+                        #{item}
+                    </foreach>
+             ) ranked_data
+        GROUP BY pid
+    </select>
+
+    <update id="updatePerformanceByIds" >
+        update u_member
+        <set>
+            <if test="e.inviteNum != null">
+                invite_num = invite_num + #{e.inviteNum},
+            </if>
+            <if test="e.prizeAmount != null">
+                prize_amount = prize_amount + #{e.prizeAmount},
+            </if>
+            <if test="e.performance != null">
+                performance = performance + #{e.performance},
+            </if>
+            <if test="e.teamPerformance != null">
+                team_performance = team_performance + #{e.teamPerformance},
+            </if>
+            <if test="e.frozenPerformance != null">
+                frozen_performance = frozen_performance + #{e.frozenPerformance},
+            </if>
+        </set>
+        <where>
+            id in
+            <foreach collection="uids" item="item" open="(" close=")" separator="," >
+                #{item}
+            </foreach>
+        </where>
+    </update>
+</mapper>

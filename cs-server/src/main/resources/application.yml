@@ -1,0 +1,174 @@
+server:
+  shutdown: ${config.shutdown}
+  servlet:
+    context-path: ${config.contextPath}
+  port: ${config.port}
+  forward-headers-strategy: framework
+spring:
+  profiles:
+    active: test
+  mvc:
+    throw-exception-if-no-handler-found: true
+  servlet:
+    multipart:
+      max-file-size: ${config.maxFileSize}
+      file-size-threshold: ${config.fileSizeThreshold}
+  task:
+    execution:
+      pool:
+        allow-core-thread-timeout: true
+        core-size: ${execute.coreSize}
+        keep-alive: ${execute.keepAlive}
+      shutdown:
+        await-termination: true
+        await-termination-period: ${execute.awaitPeriod}
+      thread-name-prefix: task-
+    scheduling:
+      thread-name-prefix: schd-
+      pool:
+        size: ${schedule.poolSize}
+      shutdown:
+        awaitTermination: true
+        awaitTerminationPeriod: ${schedule.awaitPeriod}
+  datasource:
+    url: ${mysql.url}
+    username: ${mysql.user}
+    password: ${mysql.pwd}
+    druid:
+      driverClassName: com.mysql.cj.jdbc.Driver
+  redis:
+    host: ${redis.host}
+    database: ${redis.db}
+    port: ${redis.port}
+    password: ${redis.pwd}
+    timeout: ${redis.timeout}
+    lettuce:
+      shutdown-timeout: ${redis.pool.shutdownTimeout}
+      pool:
+        enabled: true
+        maxActive: ${redis.pool.maxActive}
+        maxWait: ${redis.pool.maxWait}
+        minIdle: ${redis.pool.minIdle}
+        maxIdle: ${redis.pool.maxIdle}
+        timeBetweenEvictionRuns: ${redis.pool.timeBetweenEvictionRuns}
+    stream:
+      host: ${redis.stream.host}
+      password: ${redis.stream.pwd}
+      port: ${redis.stream.port}
+      database: ${redis.stream.db}
+      timeout: ${redis.stream.timeout}
+      lettuce:
+        shutdown-timeout: ${redis.stream.pool.shutdownTimeout}
+        pool:
+          enabled: true
+          maxActive: ${redis.stream.pool.maxActive}
+          maxWait: ${redis.stream.pool.maxWait}
+          minIdle: ${redis.stream.pool.minIdle}
+          maxIdle: ${redis.stream.pool.maxIdle}
+          timeBetweenEvictionRuns: ${redis.stream.pool.timeBetweenEvictionRuns}
+
+springdoc:
+  swagger-ui:
+    version: 5.17.14
+
+mybatis-plus:
+  configuration:
+    log-impl: ${mybatisPlus.log}
+
+logging:
+  file:
+    name: ${log.fileName}
+  level:
+    #查看bean依赖和match
+    #org.springframework.boot.autoconfigure: DEBUG
+    com.ywlx.web.spring.helper.http.com.n.web.spring.helper.http.HttpHelper: DEBUG
+    org.web3j.protocol.http.HttpService: INFO
+    com.binance.connector.client.utils.RequestHandler: WARN
+
+sp:
+  jwt:
+    signKey: ${jwt.signKey}
+  i18n:
+    locale: en-US
+  config:
+    signFilter: ${filter.sign}
+    signFilterWhiteUrls: ${filter.signFilterWhiteUrls}
+
+crypt:
+  hashids:
+    salt: ${hashids.salt}
+    minLength: ${hashids.minLength}
+    alphabet: ${hashids.alphabet}
+  aes:
+    secretKey: ${aes.secretKey}
+  rsa:
+    genType: ${rsa.genType}
+    fileType: PKCS8
+    filePath: ${rsa.filePath}
+
+evm:
+  config:
+    keystorePath: ${evm.keystorePath}
+    keyPwd: ${evm.keyPwd}
+
+hhff:
+  config:
+    api: ${hhff.api}
+    merchantId: ${hhff.merchantId}
+    secret: ${hhff.secret}
+
+okx:
+  config:
+    testnet: ${okx.testnet}
+
+app:
+  config:
+    agent: ${app.agent}
+    taskFlag: ${app.taskFlag}
+    uploadPath: ${app.uploadPath}
+    inviteRankPrizeNum: ${app.inviteRankPrizeNum}
+    gaIssuer: ${app.gaIssuer}
+    welcomeStr: ${app.welcomeStr}
+    inviteRankNum: ${app.inviteRankNum}
+    getGenesisStart: ${app.getGenesisStart}
+    genesisNum: ${app.genesisNum}
+    priceDecimal: ${app.priceDecimal}
+    tokenDecimal: ${app.tokenDecimal}
+    regCanWithdraw: ${app.regCanWithdraw}
+    autoSellGccFlag: ${app.autoSellGccFlag}
+    checkQrCode: ${app.checkQrCode}
+    callPayApi: ${app.callPayApi}
+    paytool: ${app.paytool}
+    payNotifyUrl: ${app.payNotifyUrl}
+    allowPayTypes: ${app.allowPayTypes}
+    okxLastCloseTime: ${app.okxLastCloseTime}
+    okxSleepTime: ${app.okxSleepTime}
+    okxApiPageLimit: ${app.okxApiPageLimit}
+    okxBalanceRefreshLimit: ${app.okxBalanceRefreshLimit}
+    skipApiCheck: ${app.skipApiCheck}
+    invitePoolSettleDay: ${app.invitePoolSettleDay}
+    tokenLpAddr: ${app.tokenLpAddr}
+    tokenDirection: ${app.tokenDirection}
+    tokenTwapMinute: ${app.tokenTwapMinute}
+    tokenTwapGap: ${app.tokenTwapGap}
+    useLegendaryCopyOfTrader: ${app.useLegendaryCopyOfTrader}
+    agentCode: ${app.agentCode}
+tg:
+  bot:
+    config:
+      enable: ${tg.bot.enable}
+      api: ${tg.bot.api}
+tron:
+  fullnode:
+    #    url: https://api.trongrid.io
+    url: https://nile.trongrid.io
+  api:
+    key: f0d75aa6-48e6-4dbb-a48e-c3d5b0f1bdc5
+  rental:
+    deposit-address: TFEWqCSUFs6tthfyLWFjpUepSqWPWKDZQx
+    ratio: 10667 # 1 TRX = 10 Energy (Configure according to market)
+    duration: 150000    # 默认租赁时长(毫秒) = 15f分钟
+    min-amount: 3000000  # 最小租赁金额(SUN) = 1 TRX
+
+
+

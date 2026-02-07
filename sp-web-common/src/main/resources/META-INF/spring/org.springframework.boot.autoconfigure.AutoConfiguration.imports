@@ -1,0 +1,15 @@
+com.cs.web.spring.web.DefaultExceptionHandler
+com.cs.web.spring.web.DefaultResponseAdvice
+com.cs.web.spring.config.MvcConfig
+com.cs.web.spring.config.JacksonConfig
+com.cs.web.spring.config.i18n.I18nConfig
+com.cs.web.spring.config.TxConfig
+com.cs.web.spring.config.RedisConfig
+com.cs.web.spring.config.RedisMqConfig
+com.cs.web.spring.config.JwtConfig
+com.cs.web.spring.config.OpenApiConfig
+com.cs.web.spring.config.MybitsPlusConfig
+com.cs.web.spring.helper.HelperConfig
+com.cs.web.spring.helper.CryptoAutoConfig
+com.cs.web.spring.helper.TgBotConfig
+com.cs.web.spring.config.LockConfig
