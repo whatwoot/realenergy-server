@@ -128,9 +128,9 @@ public class EvmScanHelper {
     @EventListener
     @Order(0)
     public void init(ApplicationStartedEvent e) throws IOException {
-        prod = env.acceptsProfiles(Profiles.of("prod"));
-        hashOps = stringRedisTemplate.boundHashOps(CacheKey.SCAN_EVM);
-        refresh();
+//        prod = env.acceptsProfiles(Profiles.of("prod"));
+//        hashOps = stringRedisTemplate.boundHashOps(CacheKey.SCAN_EVM);
+//        refresh();
     }
 
     @EventListener

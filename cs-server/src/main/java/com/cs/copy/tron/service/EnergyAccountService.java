@@ -39,5 +39,11 @@ public interface EnergyAccountService extends IService<EnergyAccount> {
      */
     void removeFromPool(Long accountId);
 
+    /**
+     * 统计能量池中所有账号的可用能量总和
+     * @return 可用能量总和
+     */
+    long getTotalAvailableEnergy();
+
     public EnergyStatsVO getEnergyStatsVO();
 }

@@ -2,11 +2,13 @@ package com.cs.copy.tron.service.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.cs.copy.system.api.service.ConfigService;
 import com.cs.copy.tron.api.vo.EnergyStatsVO;
 import com.cs.copy.tron.entity.EnergyAccount;
 import com.cs.copy.tron.mapper.EnergyAccountMapper;
 import com.cs.copy.tron.service.EnergyAccountService;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
@@ -25,8 +27,8 @@ import java.util.concurrent.locks.ReentrantReadWriteLock;
 @Service("tronV2EnergyAccountService")
 public class EnergyAccountServiceImpl extends ServiceImpl<EnergyAccountMapper, EnergyAccount> implements EnergyAccountService {
 
-    @Value("${tron.rental.deposit-address:''}")
-    private String depositAddress;
+    @Autowired
+    private ConfigService configService;
     /**
      * 能量池优先队列 - 按可用能量降序排列
      */
@@ -170,19 +172,36 @@ public class EnergyAccountServiceImpl extends ServiceImpl<EnergyAccountMapper, E
         }
     }
 
+    /**
+     * 统计能量池中所有账号的可用能量总和
+     */
+    @Override
+    public long getTotalAvailableEnergy() {
+        queueLock.readLock().lock();
+        try {
+            return accountMap.values().stream()
+                    .mapToLong(EnergyAccount::getAvailableEnergy)
+                    .sum();
+        } finally {
+            queueLock.readLock().unlock();
+        }
+    }
+
     public EnergyStatsVO getEnergyStatsVO(){
         EnergyStatsVO stats = new EnergyStatsVO();
         queueLock.readLock().lock();
         try {
-            stats.setDepositAddress(depositAddress);
-            stats.setEnergyPoolSize(150000000L);
-            stats.setAvailableEnergy(175800000L);
-            stats.setTransactionVolume(200050000L);
-            stats.setUserCount(1000000L);
+            stats.setDepositAddress(configService.getValueByKey("depositAddress"));
+            stats.setEnergyPoolSize(configService.getLongByKey("energyPoolSize"));
+            stats.setAvailableEnergy(configService.getLongByKey("availableEnergy") + getTotalAvailableEnergy());
+            stats.setTransactionVolume(configService.getLongByKey("transactionVolume"));
+            stats.setUserCount(configService.getLongByKey("userCount"));
 
         } finally {
             queueLock.readLock().unlock();
         }
         return stats;
     }
+
+
 }
