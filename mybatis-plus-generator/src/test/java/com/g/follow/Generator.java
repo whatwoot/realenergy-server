@@ -49,7 +49,7 @@ public class Generator {
 //        String table = "b_asset";
 //        String table = "b_asset_flow";
 
-        String table = "tron_energy_rental_price";
+        String table = "sys_dict_data";
 
         // 基于子目录
 //        String subModule = table.replaceFirst("tb_", "").replaceFirst("gms_", "");

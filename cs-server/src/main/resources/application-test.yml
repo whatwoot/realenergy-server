@@ -1,6 +1,6 @@
 config:
   contextPath: /
-  port: 23088
+  port: 23055
   shutdown: immediate
   maxFileSize: 15MB
   fileSizeThreshold: 1MB
@@ -48,9 +48,12 @@ hashids:
   alphabet: ABCDEFGHJK23456789MNPQRSTUVWXYZ
 
 mysql:
-  url: jdbc:mysql://127.0.0.1:3306/nexa?useUnicode=true&characterEncoding=utf8&zeroDateTimeBehavior=convertToNull&useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=GMT%2B8
+  url: jdbc:mysql://127.0.0.1:3306/realenergy?useUnicode=true&characterEncoding=utf8&zeroDateTimeBehavior=convertToNull&useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=GMT%2B8
   user: dev
   pwd: Dev2023@#!
+#  url: jdbc:mysql://13.251.201.149:3306/realenergy?useUnicode=true&characterEncoding=utf8&zeroDateTimeBehavior=convertToNull&useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=GMT%2B8
+#  user: root
+#  pwd: MIE36HLLmTWvfGLI7adeR44wx
 
 spring:
   datasource:
@@ -157,3 +160,9 @@ tron:
     ratio: 10667 # 1 TRX = 10667 Energy (Configure according to market),3trx=32000
     duration: 600000    # 默认租赁时长(毫秒) = 1小时
     min-amount: 1000000  # 最小租赁金额(SUN) = 1 TRX
+  aes:
+    key: Fxtuy#6xw1234567
+gasstation:
+  domain: https://openapi.gasstation.ai/
+  app_id: f36813b1a0195fdff783ec2ab1545ea3
+  secret: f4af2061d2424cb5

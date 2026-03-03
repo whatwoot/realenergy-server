@@ -169,6 +169,14 @@ tron:
     ratio: 10667 # 1 TRX = 10 Energy (Configure according to market)
     duration: 150000    # 默认租赁时长(毫秒) = 15f分钟
     min-amount: 3000000  # 最小租赁金额(SUN) = 1 TRX
+  aes:
+    key: ${tron.aes.key}
+
+# GasStation 配置
+gasstation:
+  domain: ${gasstation.domain}
+  app_id: ${gasstation.app_id}
+  secret: ${gasstation.secret}
 
 
 
