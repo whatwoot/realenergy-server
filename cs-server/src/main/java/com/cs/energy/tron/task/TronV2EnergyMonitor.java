@@ -3,6 +3,7 @@ package com.cs.energy.tron.task;
 import cn.hutool.core.util.HexUtil;
 import cn.hutool.json.JSONArray;
 import cn.hutool.json.JSONObject;
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.cs.energy.system.api.service.ConfigService;
 import com.cs.energy.tron.api.entity.TronEnergyRentalPrice;
 import com.cs.energy.tron.api.service.TronEnergyRentalPriceService;
@@ -142,10 +143,10 @@ public class TronV2EnergyMonitor {
     // ==================== 任务1: 每秒监控转账记录 ====================
 
     /**
-     * 每30秒查询指定账号的转账记录
+     * 每3秒查询指定账号的转账记录
      * 如果收到承租方的转账，处理租用能量申请
      */
-    @Scheduled(fixedRate = 30000)
+    @Scheduled(fixedRate = 3000)
     public void monitorDeposits() {
         String depositAddress = configService.getValueByKey("depositAddress");
         if (depositAddress == null || depositAddress.isEmpty()) {
@@ -154,7 +155,7 @@ public class TronV2EnergyMonitor {
 
         long now = System.currentTimeMillis();
         if(lastScanTime==0){
-            lastScanTime = this.rentalService.getLastRentTime()>0?this.rentalService.getLastRentTime():now - 24*60*60000;
+            lastScanTime = this.rentalService.getLastRentTime()>0?this.rentalService.getLastRentTime():now - 3*60*60000;
         }
         try {
             // 查询最近的转入交易
@@ -215,6 +216,10 @@ public class TronV2EnergyMonitor {
 
             String fromAddress = value.getStr("owner_address");
             long amount = value.getLong("amount", 0L);
+            if(amount<minAmount){
+                log.warn("转账金额不足，忽略: {} from {}", amount, tronClient.toBase58(fromAddress));
+                return;
+            }
 
             // 从交易备注信息中提取 rentAddress
             String rentAddress = null;
@@ -604,7 +609,10 @@ public class TronV2EnergyMonitor {
 //            log.error("更新能量汇率失败", e);
 //        }
 
-        List<EnergyAccount> accounts = accountService.getAllPoolAccounts();
+//        List<EnergyAccount> accounts = accountService.getAllPoolAccounts();
+        List<EnergyAccount> accounts = accountService.list(new LambdaQueryWrapper<EnergyAccount>()
+                .eq(EnergyAccount::getStatus, 1)
+        );
 
         for (EnergyAccount account : accounts) {
             if (account.getLessorType() == 0) {

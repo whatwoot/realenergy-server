@@ -4,29 +4,9 @@ import cn.hutool.extra.spring.SpringUtil;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.config.GlobalConfig;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
-import com.cs.energy.asset.api.entity.AssetFlow;
-import com.cs.energy.asset.api.enums.AssetSceneEnum;
-import com.cs.energy.asset.api.enums.AssetTypeEnum;
-import com.cs.energy.asset.api.service.AssetFlowService;
-import com.cs.energy.asset.api.service.AssetService;
-import com.cs.energy.asset.api.service.WithdrawFlowService;
-import com.cs.energy.chain.api.entity.ChainAddress;
-import com.cs.energy.chain.api.enums.AddressTypeEnum;
-import com.cs.energy.chain.api.service.ChainAddressService;
-import com.cs.energy.evm.api.entity.Symbol;
-import com.cs.energy.evm.api.event.RefreshAddrBalanceEvent;
-import com.cs.energy.evm.api.service.EvmService;
-import com.cs.energy.evm.api.service.SymbolService;
-import com.cs.energy.evm.server.config.prop.EvmProperties;
-import com.cs.energy.evm.server.util.EvmUtil;
+
 import com.cs.energy.global.constants.CacheKey;
-import com.cs.energy.member.api.entity.Member;
-import com.cs.energy.member.api.entity.MemberWallet;
-import com.cs.energy.member.api.enums.ChainEnum;
-import com.cs.energy.member.api.enums.MemberWalletTypeEnum;
-import com.cs.energy.member.api.service.LoginService;
-import com.cs.energy.member.api.service.MemberService;
-import com.cs.energy.member.api.service.MemberWalletService;
+
 import com.cs.energy.system.api.entity.Config;
 import com.cs.energy.system.api.enums.CacheKeyEnum;
 import com.cs.energy.system.api.enums.SseNameEnum;
@@ -34,7 +14,6 @@ import com.cs.energy.system.api.event.PropRefreshEvent;
 import com.cs.energy.system.api.event.ReBuildCacheEvent;
 import com.cs.energy.system.api.event.ReFreshEnergyPoolEvent;
 import com.cs.energy.system.api.event.RefreshConfigEvent;
-import com.cs.energy.system.api.request.EnsureRechargeAddrRequest;
 import com.cs.energy.system.api.service.ConfigService;
 import com.cs.energy.system.api.service.SseService;
 import com.cs.energy.system.server.config.prop.AppProperties;
@@ -103,22 +82,14 @@ public class SysController {
     @Autowired
     private ConfigService configService;
 
-    @Autowired
-    private MemberService memberService;
-
-    @Autowired
-    private AssetService assetService;
 
     @Autowired
     private SseService sseService;
 
-    @Autowired
-    private AssetFlowService assetFlowService;
 
     @Autowired
     private AesHelper aesHelper;
-    @Autowired
-    private ChainAddressService chainAddressService;
+
 
     @Autowired
     private StringRedisTemplate stringRedisTemplate;
@@ -126,24 +97,10 @@ public class SysController {
     @Autowired
     private HashidsHelper hashidsHelper;
 
-    @Autowired
-    private EvmProperties evmProperties;
-
-    @Autowired
-    private EvmService evmService;
 
     @Autowired
     private RsaHelper rsaHelper;
 
-    @Autowired
-    private MemberWalletService memberWalletService;
-    @Autowired
-    private LoginService loginService;
-    @Autowired
-    private SymbolService symbolService;
-
-    @Autowired
-    private WithdrawFlowService withdrawFlowService;
 
 
     @Autowired
@@ -194,197 +151,6 @@ public class SysController {
     }
 
 
-    @Operation(summary = "更新邀请码")
-    @GetMapping("/refreshInviteCode")
-    public Long refreshInviteCode(Integer force) {
-        List<Member> list = memberService.list();
-        Member update;
-        long count = 0;
-        for (Member member : list) {
-            if (YesNoIntEnum.YES.eq(force) || !StringUtils.hasText(member.getInviteCode())) {
-                update = new Member();
-                update.setId(member.getId());
-                update.setInviteCode(hashidsHelper.encode(update.getId()));
-                memberService.updateById(update);
-                count++;
-            }
-        }
-        return count;
-    }
-
-    @Operation(summary = "添加资产")
-    @GetMapping("/addAsset")
-    public void addAsset(@RequestParam(required = false) Long uid,
-                         @RequestParam(required = false) String mainAccount,
-                         @RequestParam(defaultValue = "CFST") String symbol,
-                         @RequestParam(defaultValue = "0101") String scene,
-                         @RequestParam BigDecimal amount,
-                         @RequestParam(required = false) String memo) {
-        Member member;
-        if (uid == null) {
-            member = memberService.getOne(new QueryWrapper<Member>().lambda().eq(Member::getMainAccount, mainAccount));
-            expectNotNull(member, "chk.common.invalid", "mainAccount");
-        } else {
-            member = memberService.getById(uid);
-            expectNotNull(member, "chk.common.invalid", "id");
-        }
-        AssetFlow assetFlow = new AssetFlow();
-        assetFlow.setType(AssetTypeEnum.DEFAULT.getCode());
-        assetFlow.setUid(member.getId());
-        assetFlow.setSymbol(symbol);
-        assetFlow.setBalance(amount);
-        assetFlow.setMemo(memo);
-        AssetSceneEnum sceneEnum = AssetSceneEnum.of(scene);
-        expectNotNull(sceneEnum, "chk.common.invalid", "type");
-        assetFlow.setScene(sceneEnum.getCode());
-        switch (sceneEnum) {
-            case WITHDRAW:
-            case RECHARGE:
-                MemberWallet one = memberWalletService.getOne(new QueryWrapper<MemberWallet>().lambda()
-                        .eq(MemberWallet::getUid, assetFlow.getUid())
-                        .eq(MemberWallet::getType, MemberWalletTypeEnum.RECHARGE.getCode()));
-                if (one != null) {
-                    assetFlow.setMemo(StringUtil.senseWallet(one.getWallet()));
-                }
-                break;
-        }
-        assetService.updateAsset(assetFlow);
-        sseService.sendTo(member.getId(), SseNameEnum.ADD_ASSET.getCode(), member.getId());
-    }
-
-    @Operation(summary = "设置归集地址")
-    @GetMapping("/setCollectAddr")
-    public ChainAddress setCollectAddr(@RequestParam String wallet,
-                                       @RequestParam(defaultValue = "USDT") String symbol,
-                                       @RequestParam(required = false, defaultValue = "0") Integer weight) {
-        expect(WalletUtils.isValidAddress(wallet), "chk.common.invalid", "wallet");
-        ChainAddress addr = new ChainAddress();
-        addr.setChain(ChainEnum.BSC.getCode());
-        addr.setType(AddressTypeEnum.COLLECT.getCode());
-        addr.setSymbol(symbol);
-        // 充值地址不需要私钥，其他需要私钥
-        addr.setNeedRefresh(YesNoByteEnum.YES.getCode());
-        addr.setAddr(wallet.toLowerCase());
-        addr.setShowAddr(Keys.toChecksumAddress(wallet));
-        addr.setStatus(YesNoByteEnum.YES.getCode());
-        addr.setUpdateAt(0L);
-        addr.setWeight(weight);
-        chainAddressService.save(addr);
-        return addr;
-    }
-
-    @Operation(summary = "刷新钱包余额")
-    @GetMapping("/refreshAddrBalance")
-    public void refreshAddrBalance() {
-        SpringUtil.publishEvent(new RefreshAddrBalanceEvent(this));
-    }
-
-    @Operation(summary = "初始化指定数量的钱包")
-    @GetMapping("/initWallet")
-    public ChainAddress initTonWallet(@RequestParam(defaultValue = "bsc") String chain,
-                              @RequestParam(defaultValue = "1", required = false) Integer num,
-                              @RequestParam(defaultValue = "CFST") String symbol,
-                              @RequestParam(defaultValue = "1", required = false) String type,
-                              @RequestParam(required = false) String kp,
-                              @RequestParam(required = false, defaultValue = "false") Boolean samePrivate,
-                              @RequestParam(required = false, defaultValue = "0") Integer weight,
-                              @RequestParam(required = false, defaultValue = "0") String status
-                            ) throws CipherException, InvalidAlgorithmParameterException, NoSuchAlgorithmException, NoSuchProviderException, IOException {
-        // 如果用私钥，就只生成一个钱包地址
-        Credentials credentials;
-        if (StringUtils.hasText(kp)) {
-            credentials = Credentials.create(kp);
-        } else {
-            String keystoreFileName = WalletUtils.generateFullNewWalletFile(evmProperties.getKeyPwd(), new File(evmProperties.getKeystorePath()));
-            File keystore = new File(evmProperties.getKeystorePath(), keystoreFileName);
-            credentials = WalletUtils.loadCredentials(evmProperties.getKeyPwd(), keystore);
-        }
-        String priv = Numeric.toHexStringNoPrefix(credentials.getEcKeyPair().getPrivateKey());
-        ChainAddress addr = new ChainAddress();
-        addr.setChain(ChainEnum.BSC.getCode());
-        addr.setType(Byte.valueOf(type));
-        addr.setSymbol(symbol);
-        // 充值地址不需要私钥，其他需要私钥
-        addr.setNeedRefresh(AddressTypeEnum.RECHARGE.eq(addr.getType()) ? YesNoByteEnum.NO.getCode() : YesNoByteEnum.YES.getCode());
-        addr.setAddr(credentials.getAddress());
-        addr.setShowAddr(Keys.toChecksumAddress(credentials.getAddress()));
-        addr.setPrivKey(aesHelper.encrypt(priv));
-        addr.setStatus(Byte.valueOf(status));
-        addr.setUpdateAt(0L);
-        chainAddressService.save(addr);
-        return addr;
-    }
-
-    @Operation(summary = "发送钱包中的代币")
-    @GetMapping("/sendBscCoin")
-    public String sendCoin(@RequestParam(required = false) Long id,
-                           @RequestParam(required = false) String addr,
-                           @RequestParam String to,
-                           @RequestParam(defaultValue = "USDT") String symbol,
-                           @RequestParam(required = false, defaultValue = "") String contract,
-                           @RequestParam BigDecimal amount) throws IOException {
-        ChainAddress chainAddress = null;
-        if (id != null) {
-            chainAddress = chainAddressService.getById(id);
-        } else if (StringUtils.hasText(addr)) {
-            chainAddress = chainAddressService.getOne(Wrappers.lambdaQuery(ChainAddress.class)
-                    .eq(ChainAddress::getChain, ChainEnum.BSC.getCode())
-                    .eq(ChainAddress::getAddr, addr));
-        } else {
-            throwParamException("chk.common.required", "addr");
-        }
-        expectNotNull(chainAddress, "chk.common.invalid");
-        expectNotBlank(chainAddress.getPrivKey(), "chk.common.invalid", "privateKey");
-        String priv = aesHelper.decrypt(chainAddress.getPrivKey());
-        Integer decimals = 18;
-        if (!StringUtils.hasText(contract)) {
-            expectNotBlank(symbol, "chk.common.required", "symbol or contract");
-            Symbol coin = symbolService.getOne(new QueryWrapper<Symbol>().lambda()
-                    .eq(Symbol::getChain, ChainEnum.BSC.getCode())
-                    .eq(Symbol::getSymbol, symbol));
-            contract = coin.getQuoteCa();
-            decimals = coin.getQuoteDecimals();
-            expectNotBlank(contract, "chk.common.invalid", "contract");
-        }
-        Pair<Response.Error, EthSendTransaction> pair = evmService.broadcast(priv, contract, "transfer", Arrays.asList(new Address(to), new Uint256(EvmUtil.toWei(amount, decimals))), Collections.emptyList());
-        if (pair.getLeft() != null) {
-            return pair.getLeft().getCode() + ":" + pair.getLeft().getMessage();
-        }
-        return pair.getRight().getTransactionHash();
-    }
-
-    @Operation(summary = "approve授权")
-    @GetMapping("/approve")
-    public String approve(@RequestParam(required = false) Long id,
-                          @RequestParam(required = false) String addr,
-                          @RequestParam String contract,
-                          @RequestParam String spender,
-                          @RequestParam(required = false) String amount) throws IOException {
-        ChainAddress chainAddress = null;
-        if (id != null) {
-            chainAddress = chainAddressService.getById(id);
-        } else if (StringUtils.hasText(addr)) {
-            chainAddress = chainAddressService.getOne(new QueryWrapper<ChainAddress>().lambda().eq(ChainAddress::getAddr, addr));
-        } else {
-            throwParamException("chk.common.required", "addr");
-        }
-        expectNotNull(chainAddress, "chk.common.invalid");
-        String priv = aesHelper.decrypt(chainAddress.getPrivKey());
-        BigInteger num;
-        if (StringUtils.hasText(amount)) {
-            num = new BigInteger(amount);
-        } else {
-            num = BigInteger.valueOf(2).pow(256).subtract(BigInteger.ONE);
-        }
-        Pair<Response.Error, EthSendTransaction> pair = evmService.broadcast(priv, contract, "approve", Arrays.asList(new Address(spender), new Uint256(num)), Collections.emptyList());
-        return pair.getLeft() != null ? pair.getLeft().getMessage() : pair.getRight().getTransactionHash();
-    }
-
-    @Operation(summary = "补充用户充值地址")
-    @GetMapping("/ensureRechargeAddr")
-    public Integer testEnsureRechargeAddr(@Valid EnsureRechargeAddrRequest req) {
-        return memberService.resetRechargeAddr(req.getForce(), req.getUid(), req.getSymbol(), req.getChain());
-    }
 
     @Operation(summary = "sse推送测试")
     @GetMapping("/sseSend")

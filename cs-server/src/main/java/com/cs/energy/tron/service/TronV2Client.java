@@ -186,8 +186,8 @@ public class TronV2Client {
         log.info("代理资源请求: owner={}, receiver={}, amount={}, signer={}",
                 fromAddr, toAddr, energyAmount, signerAddress);
 
-//        // 2. 检查签名者是否有权限，并获取对应的 permission_id
-//        int permissionId = -1;
+        // 2. 检查签名者是否有权限，并获取对应的 permission_id
+////        int permissionId = -1;
 //        if (fromAddr.equals(signerAddress)) {
 //            // 如果是资源账号自己签名，使用 owner permission (ID=0)
 //            permissionId = 0;

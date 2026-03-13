@@ -1,5 +1,0 @@
-
-###
-GET http://localhost:11088/sapi/evm/scan/start?flag=1
-Accept-Language: zh-TW
-Content-Type: application/json
